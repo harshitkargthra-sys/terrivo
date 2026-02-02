@@ -9,10 +9,6 @@ interface ProductCardProps {
   amazonLink: string;
   flipkartLink: string;
   description: string;
-  // Medusa optional fields
-  variantId?: string;
-  stock?: number;
-  inStock?: boolean;
 }
 
 const ProductCard = ({
@@ -22,8 +18,6 @@ const ProductCard = ({
   amazonLink,
   flipkartLink,
   description,
-  inStock = true,
-  stock = 0,
 }: ProductCardProps) => {
   return (
     <div className="group bg-card rounded-2xl border border-border overflow-hidden card-hover">
@@ -34,18 +28,6 @@ const ProductCard = ({
           alt={name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-
-        {/* Stock Badge - Only show if stock data is available */}
-        {!inStock && (
-          <div className="absolute top-3 right-3 px-3 py-1 bg-destructive text-destructive-foreground text-xs font-semibold rounded-full">
-            Out of Stock
-          </div>
-        )}
-        {inStock && stock < 10 && stock > 0 && (
-          <div className="absolute top-3 right-3 px-3 py-1 bg-amber-500 text-white text-xs font-semibold rounded-full">
-            Only {stock} left
-          </div>
-        )}
       </div>
 
       {/* Content */}

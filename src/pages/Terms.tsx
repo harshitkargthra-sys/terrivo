@@ -10,7 +10,7 @@ const Terms = () => {
                     name="description"
                     content="Read Terrivo's Terms & Conditions. Learn about our policies regarding website usage, purchases, warranties, and legal terms."
                 />
-                <link rel="canonical" href="https://terrivo.com/terms" />
+                <link rel="canonical" href="https://terrivo.in/terms" />
             </Helmet>
 
             <Layout>

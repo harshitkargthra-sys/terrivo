@@ -88,7 +88,7 @@ const Warranty = () => {
           name="description"
           content="Register your Terrivo product warranty online. Get comprehensive coverage and peace of mind with our hassle-free warranty registration process."
         />
-        <link rel="canonical" href="https://terrivo.com/warranty" />
+        <link rel="canonical" href="https://terrivo.in/warranty" />
       </Helmet>
 
       <Layout>

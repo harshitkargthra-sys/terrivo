@@ -16,7 +16,7 @@ const Index = () => {
           content="Discover Terrivo's premium electronics collection. Wireless earbuds, smartwatches, power banks and headphones designed for your lifestyle. Shop now on Amazon and Flipkart."
         />
         <meta name="keywords" content="Terrivo, electronics, wireless earbuds, smartwatch, power bank, headphones, premium quality" />
-        <link rel="canonical" href="https://terrivo.com" />
+        <link rel="canonical" href="https://terrivo.in" />
       </Helmet>
 
       <Layout>

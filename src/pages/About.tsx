@@ -39,12 +39,12 @@ const About = () => {
   return (
     <>
       <Helmet>
-        <title>About Terrivo - Our Story & Values | Premium Electronics Brand</title>
+        <title>About Terrivo - Our Story & Values | Premium Home Textile Brand</title>
         <meta
           name="description"
-          content="Learn about Terrivo's commitment to quality, reliability, and customer satisfaction. Discover why thousands trust our premium electronics for their daily needs."
+          content="Learn about Terrivo's commitment to quality, reliability, and customer satisfaction. Discover why thousands trust our premium fabric storage solutions for their daily needs."
         />
-        <link rel="canonical" href="https://terrivo.com/about" />
+        <link rel="canonical" href="https://terrivo.in/about" />
       </Helmet>
 
       <Layout>

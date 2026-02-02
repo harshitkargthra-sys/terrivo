@@ -161,6 +161,7 @@ const Support = () => {
     <>
       <Helmet>
         <title>Support & Warranty Claim | Terrivo</title>
+        <link rel="canonical" href="https://terrivo.in/support" />
       </Helmet>
 
       <Layout>
@@ -430,7 +431,7 @@ const Support = () => {
                         <h4 className="font-semibold text-foreground mb-2">13. Contact Information</h4>
                         <p>
                           For warranty-related queries or support, please contact:{" "}
-                          <a href="mailto:support@terrivo.com" className="text-primary hover:underline font-medium">support@terrivo.com</a>
+                          <a href="mailto:support@terrivo.in" className="text-primary hover:underline font-medium">support@terrivo.in</a>
                         </p>
                         <p className="mt-2 font-medium text-foreground/90">
                           Customers must ship the product to Terrivo's warehouse for inspection. Warranty applies only to manufacturing defects in fabric, stitching, and materials.
@@ -450,8 +451,8 @@ const Support = () => {
               <div className="mt-8 text-center">
                 <p className="text-muted-foreground">
                   Need immediate assistance? Email us at{" "}
-                  <a href="mailto:support@terrivo.com" className="text-primary hover:underline font-medium">
-                    support@terrivo.com
+                  <a href="mailto:support@terrivo.in" className="text-primary hover:underline font-medium">
+                    support@terrivo.in
                   </a>
                 </p>
               </div>

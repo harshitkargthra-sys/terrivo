@@ -10,7 +10,7 @@ const Privacy = () => {
           name="description"
           content="Read Terrivo's privacy policy. Learn how we collect, use, and protect your personal information."
         />
-        <link rel="canonical" href="https://terrivo.com/privacy" />
+        <link rel="canonical" href="https://terrivo.in/privacy" />
       </Helmet>
 
       <Layout>
