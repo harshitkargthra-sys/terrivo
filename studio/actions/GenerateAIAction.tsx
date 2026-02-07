@@ -18,7 +18,7 @@ export function GenerateAIAction(props: DocumentActionProps) {
             // If on localhost:3333 (Sanity), try to hit localhost:8888 (Netlify)
             const functionUrl = window.location.hostname === 'localhost'
                 ? 'http://localhost:8888/.netlify/functions/generatePost'
-                : 'https://terrivo.in/.netlify/functions/generatePost';
+                : 'https://terrivowebsite.netlify.app/.netlify/functions/generatePost';
 
             const response = await fetch(functionUrl, {
                 method: 'POST',
