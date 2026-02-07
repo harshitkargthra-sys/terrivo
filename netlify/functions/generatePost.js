@@ -14,45 +14,56 @@ exports.handler = async function (event, context) {
         const { prompt } = JSON.parse(event.body);
         const apiKey = process.env.API_KEY;
 
-        if (!apiKey) return { statusCode: 500, headers, body: JSON.stringify({ error: 'API_KEY missing' }) };
+        if (!apiKey) return { statusCode: 500, headers, body: JSON.stringify({ error: 'API_KEY missing in environment' }) };
+
+        // Log short preview of key for debugging
+        console.log(`Using API Key starting with: ${apiKey.substring(0, 7)}... and ending with ...${apiKey.slice(-4)}`);
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // List of models to try in order of preference
-        const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"];
-        let lastError = null;
+        // Extended list of models to try
+        const modelsToTry = [
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+            "gemini-1.0-pro",
+            "gemini-pro"
+        ];
+
+        let lastError = "";
         let data = null;
 
         for (const modelName of modelsToTry) {
             try {
-                console.log(`Attempting generation with model: ${modelName}`);
+                console.log(`Trying model: ${modelName}`);
                 const model = genAI.getGenerativeModel({ model: modelName });
 
                 const aiPrompt = `Generate a professional blog post about: "${prompt}". 
-                Return ONLY a JSON object with these exact keys:
+                Return ONLY a JSON object (no markdown formatting like \`\`\`json) with these exact keys:
                 - title: A catchy and SEO-friendly title
-                - excerpt: A short 2-3 sentence summary (max 150 characters)
+                - excerpt: A short 2-3 sentence summary
                 - bodyMarkdown: The main content in markdown format. Use headings, lists, and bold text.
                 Target audience: Customers of "Terrivo".`;
 
                 const result = await model.generateContent(aiPrompt);
-                const text = result.response.text();
+                const response = await result.response;
+                const text = response.text();
 
                 const jsonMatch = text.match(/\{[\s\S]*\}/);
-                data = JSON.parse(jsonMatch ? jsonMatch[0] : text);
+                const jsonStr = jsonMatch ? jsonMatch[0] : text;
+                data = JSON.parse(jsonStr);
 
                 if (data) {
                     console.log(`Success with model: ${modelName}`);
                     break;
                 }
             } catch (err) {
-                console.error(`Failed with ${modelName}:`, err.message);
-                lastError = err;
+                console.warn(`Model ${modelName} failed:`, err.message);
+                lastError += `[${modelName}: ${err.message}] `;
             }
         }
 
         if (!data) {
-            throw new Error(`All models failed. Last error: ${lastError?.message}`);
+            throw new Error(`All models failed. Details: ${lastError}`);
         }
 
         return {
@@ -61,10 +72,14 @@ exports.handler = async function (event, context) {
             body: JSON.stringify(data),
         };
     } catch (error) {
+        console.error('Final Generation Error:', error.message);
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: error.message }),
+            body: JSON.stringify({
+                error: error.message,
+                tip: "Make sure you enabled 'Generative Language API' in Google Cloud Console for the project this key belongs to."
+            }),
         };
     }
 };
