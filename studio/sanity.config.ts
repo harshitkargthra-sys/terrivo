@@ -1,52 +1,7 @@
 import { defineConfig } from 'sanity'
 import { structureTool } from 'sanity/structure'
-
-const postSchema = {
-    name: 'post',
-    title: 'Blog Post',
-    type: 'document',
-    fields: [
-        {
-            name: 'title',
-            title: 'Title',
-            type: 'string',
-        },
-        {
-            name: 'slug',
-            title: 'Slug',
-            type: 'slug',
-            options: { source: 'title' },
-        },
-        {
-            name: 'author',
-            title: 'Author Name',
-            type: 'string',
-        },
-        {
-            name: 'mainImage',
-            title: 'Main image',
-            type: 'image',
-            options: { hotspot: true },
-        },
-        {
-            name: 'publishedAt',
-            title: 'Published at',
-            type: 'datetime',
-        },
-        {
-            name: 'excerpt',
-            title: 'Excerpt',
-            type: 'text',
-            rows: 3,
-        },
-        {
-            name: 'body',
-            title: 'Body',
-            type: 'array',
-            of: [{ type: 'block' }, { type: 'image' }],
-        },
-    ],
-}
+import { schemaTypes } from './schemas'
+import { GenerateAIAction } from './actions/GenerateAIAction'
 
 export default defineConfig({
     name: 'default',
@@ -55,6 +10,14 @@ export default defineConfig({
     dataset: 'production',
     plugins: [structureTool()],
     schema: {
-        types: [postSchema],
+        types: schemaTypes,
+    },
+    document: {
+        actions: (prev, context) => {
+            if (context.schemaType === 'post') {
+                return [GenerateAIAction, ...prev]
+            }
+            return prev
+        },
     },
 })
