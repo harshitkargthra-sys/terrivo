@@ -1,101 +1,61 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { createClient } = require("@sanity/client");
 
-// Netlify Scheduled Function (Runs at 8:00 AM every day)
-// Note: You need to set SANITY_AUTH_TOKEN in Netlify Environment Variables
 exports.handler = async function (event, context) {
-    console.log('=== Scheduled Blog Post Started ===');
-
     const apiKey = process.env.API_KEY;
     const sanityToken = process.env.SANITY_AUTH_TOKEN;
     const projectId = process.env.SANITY_PROJECT_ID || 'zvazmyez';
     const dataset = process.env.SANITY_DATASET || 'production';
 
-    if (!apiKey || !sanityToken) {
-        console.error('Missing API_KEY or SANITY_AUTH_TOKEN');
-        return { statusCode: 500, body: 'Configuration missing' };
-    }
+    if (!apiKey || !sanityToken) return { statusCode: 500, body: 'Configuration missing' };
 
-    const client = createClient({
-        projectId,
-        dataset,
-        token: sanityToken,
-        useCdn: false,
-        apiVersion: '2023-05-03',
-    });
-
+    const client = createClient({ projectId, dataset, token: sanityToken, useCdn: false, apiVersion: '2023-05-03' });
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"];
 
     try {
-        // 1. Generate a random interesting topic for Terrivo
-        const topicPrompt = `Suggest 1 interesting blog post topic for "Terrivo" (a premium electronics and lifestyle brand). 
-        Return ONLY the topic title.`;
-        const topicResult = await model.generateContent(topicPrompt);
-        const topic = topicResult.response.text().trim();
+        let selectedTopic = "";
+        let blogData = null;
 
-        console.log('Selected Topic:', topic);
+        // Try to get topic
+        for (const modelName of modelsToTry) {
+            try {
+                const model = genAI.getGenerativeModel({ model: modelName });
+                const topicResult = await model.generateContent('Suggest 1 interesting blog post topic for "Terrivo" (Premium electronics brand). Return ONLY the topic title.');
+                selectedTopic = topicResult.response.text().trim();
 
-        // 2. Generate the full post
-        const fullPrompt = `Generate a professional blog post about: "${topic}". 
-        Return ONLY a JSON object with these exact keys:
-        - title: A catchy and SEO-friendly title
-        - excerpt: A short 2-3 sentence summary
-        - bodyMarkdown: The main content in markdown format (use # for h1, ## for h2, etc.)
-        Target audience: Customers of Terrivo.`;
+                const contentResult = await model.generateContent(`Generate a blog about: "${selectedTopic}". Return ONLY JSON with: title, excerpt, bodyMarkdown.`);
+                const text = contentResult.response.text();
+                const jsonMatch = text.match(/\{[\s\S]*\}/);
+                blogData = JSON.parse(jsonMatch ? jsonMatch[0] : text);
 
-        const contentResult = await model.generateContent(fullPrompt);
-        const contentText = contentResult.response.text();
-        const jsonMatch = contentText.match(/\{[\s\S]*\}/);
-        const data = JSON.parse(jsonMatch ? jsonMatch[0] : contentText);
+                if (blogData) break;
+            } catch (err) {
+                console.error(`Scheduled post failed with ${modelName}:`, err.message);
+            }
+        }
 
-        // 3. Convert Markdown to Sanity Blocks
-        const lines = data.bodyMarkdown.split('\n');
-        const blocks = lines.filter(l => l.trim()).map(line => {
-            let style = 'normal';
-            let text = line.trim();
-            if (text.startsWith('### ')) { style = 'h3'; text = text.replace('### ', ''); }
-            else if (text.startsWith('## ')) { style = 'h2'; text = text.replace('## ', ''); }
-            else if (text.startsWith('# ')) { style = 'h1'; text = text.replace('# ', ''); }
+        if (!blogData) throw new Error("Could not generate blog data with any available model");
 
-            return {
-                _type: 'block',
-                style,
-                children: [{ _type: 'span', text }],
-            };
-        });
+        // Convert and create in Sanity
+        const blocks = blogData.bodyMarkdown.split('\n').filter(l => l.trim()).map(line => ({
+            _type: 'block',
+            style: line.startsWith('###') ? 'h3' : line.startsWith('##') ? 'h2' : line.startsWith('#') ? 'h1' : 'normal',
+            children: [{ _type: 'span', text: line.replace(/^#+\s/, '').trim() }],
+        }));
 
-        // 4. Create the post in Sanity
-        const newPost = {
+        await client.create({
             _type: 'post',
-            title: data.title,
-            slug: {
-                _type: 'slug',
-                current: data.title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '')
-            },
-            excerpt: data.excerpt,
+            title: blogData.title,
+            slug: { _type: 'slug', current: blogData.title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '') },
+            excerpt: blogData.excerpt,
             body: blocks,
             publishedAt: new Date().toISOString(),
-            author: 'AI Assistant', // You can change this
-        };
+            author: 'AI Assistant',
+        });
 
-        const result = await client.create(newPost);
-        console.log('Post created successfully:', result._id);
-
-        return {
-            statusCode: 200,
-            body: JSON.stringify({ message: 'Post created', id: result._id }),
-        };
+        return { statusCode: 200, body: 'Post created' };
     } catch (error) {
-        console.error('Error in scheduled post:', error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: error.message }),
-        };
+        return { statusCode: 500, body: error.message };
     }
 };
-
-// Netlify Schedule Expression
-// exports.config = {
-//   schedule: "0 8 * * *"
-// };
