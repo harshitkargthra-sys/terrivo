@@ -14,14 +14,17 @@ export function GenerateAIAction(props: DocumentActionProps) {
         if (!prompt) return;
         setLoading(true)
         try {
-            // Determine the URL for the Netlify function
-            // If on localhost:3333 (Sanity), try to hit localhost:8888 (Netlify)
-            const functionUrl = window.location.hostname === 'localhost'
+            console.log('Hostname:', window.location.hostname);
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const functionUrl = isLocal
                 ? 'http://localhost:8888/.netlify/functions/generatePost'
                 : 'https://terrivowebsite.netlify.app/.netlify/functions/generatePost';
 
+            console.log('Fetching from:', functionUrl);
+
             const response = await fetch(functionUrl, {
                 method: 'POST',
+                mode: 'cors',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -29,7 +32,8 @@ export function GenerateAIAction(props: DocumentActionProps) {
             })
 
             if (!response.ok) {
-                throw new Error('Could not connect to the AI service. Make sure Netlify CLI is running.')
+                const text = await response.text();
+                throw new Error(`AI Service Error (${response.status}): ${text || 'Unknown Error'}`)
             }
 
             const data = await response.json()
