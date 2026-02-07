@@ -28,7 +28,7 @@ exports.handler = async function (event, context) {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
         const aiPrompt = `Generate a professional blog post about: "${prompt}". 
         Return ONLY a JSON object (no markdown formatting like \`\`\`json) with these exact keys:
